@@ -10,4 +10,9 @@ public class UserServiceImpl implements UserService {
         System.out.println(user);
         return user;
     }
+
+//    @Override
+//    public short getNumber() {
+//        return 0;
+//    }
 }
