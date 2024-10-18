@@ -1,6 +1,8 @@
 package org.example.myrpc.config;
 
 import lombok.Data;
+import org.example.myrpc.serializer.SerializerKeys;
+
 
 /**
  * RPC框架配置信息
@@ -31,4 +33,9 @@ public class RpcConfig {
      * 支持mock
      */
     private boolean mock = false;
+
+    /**
+     * 指定序列化器
+     */
+    private String serializer = SerializerKeys.JDK;
 }

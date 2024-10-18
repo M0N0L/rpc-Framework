@@ -4,11 +4,13 @@ import io.vertx.core.Handler;
 import io.vertx.core.http.HttpServerRequest;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.buffer.Buffer;
+import org.example.myrpc.RpcApplication;
 import org.example.myrpc.model.RpcRequest;
 import org.example.myrpc.model.RpcResponse;
 import org.example.myrpc.registry.LocalRegistry;
 import org.example.myrpc.serializer.JdkSerializer;
 import org.example.myrpc.serializer.Serializer;
+import org.example.myrpc.serializer.SerializerFactory;
 
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -17,7 +19,9 @@ public class HttpServerHandler implements Handler<HttpServerRequest> {
 
     @Override
     public void handle(HttpServerRequest httpServerRequest) {
-        final Serializer serializer = new JdkSerializer();
+        // 指定序列化器
+        final Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
+
         System.out.println("Received Request" + httpServerRequest.method() + " " + httpServerRequest.uri());
         httpServerRequest.bodyHandler(body -> {
             byte[] bytes = body.getBytes();

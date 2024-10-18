@@ -1,0 +1,2 @@
+hessian=org.example.myrpc.serializer.HessianSerializer
+kryo=org.example.myrpc.serializer.KryoSerializer
