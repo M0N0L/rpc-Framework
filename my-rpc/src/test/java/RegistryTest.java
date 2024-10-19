@@ -66,4 +66,12 @@ public class RegistryTest {
         Class<?> tClass = Class.forName("org.example.myrpc.registry.EtcdRegistry");
         Assert.assertNotNull(tClass);
     }
+
+    @Test
+    public void heartBeat() throws Exception {
+        // init 方法中已经执行心跳检测了
+        register();
+        // 阻塞 1 分钟
+        Thread.sleep(60 * 1000L);
+    }
 }
