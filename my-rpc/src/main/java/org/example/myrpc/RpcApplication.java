@@ -1,8 +1,11 @@
 package org.example.myrpc;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.myrpc.config.RegistryConfig;
 import org.example.myrpc.config.RpcConfig;
 import org.example.myrpc.constant.RpcConstant;
+import org.example.myrpc.registry.Registry;
+import org.example.myrpc.registry.RegistryFactory;
 import org.example.myrpc.utils.ConfigUtils;
 
 /**
@@ -17,6 +20,11 @@ public class RpcApplication {
     public static void init(RpcConfig newRpcConfig) {
         rpcConfig = newRpcConfig;
         log.info("rpc init, config = {}", newRpcConfig.toString());
+        // 注册中心初始化
+        RegistryConfig registryConfig = rpcConfig.getRegistryConfig();
+        Registry registry = RegistryFactory.getInstance(registryConfig.getRegistry());
+        registry.init(registryConfig);
+        log.info("registry init, config = {}", registryConfig);
     }
 
     /**
@@ -26,7 +34,7 @@ public class RpcApplication {
     public static void init() {
         RpcConfig newRpcConfig;
         try{
-            newRpcConfig = ConfigUtils.loadConfig(RpcConfig.class, RpcConstant.DEFUALT_CONFIG_PREFIX);
+            newRpcConfig = ConfigUtils.loadConfig(RpcConfig.class, RpcConstant.DEFAULT_CONFIG_PREFIX);
         } catch (Exception e) {
             newRpcConfig = new RpcConfig();
         }

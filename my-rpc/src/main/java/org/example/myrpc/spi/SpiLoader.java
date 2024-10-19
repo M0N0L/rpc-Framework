@@ -4,9 +4,9 @@ package org.example.myrpc.spi;
 import cn.hutool.core.io.resource.ResourceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.example.myrpc.serializer.Serializer;
+import org.example.myrpc.registry.Registry;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Arrays;
@@ -46,7 +46,7 @@ public class SpiLoader {
     /**
      * 动态加载的类的列表
      */
-    private static final List<Class<?>> LOAD_CLASS_LIST = Arrays.asList(Serializer.class);
+    private static final List<Class<?>> LOAD_CLASS_LIST = Arrays.asList(Serializer.class, Registry.class);
 
     /**
      * 加载所有类型
@@ -113,6 +113,7 @@ public class SpiLoader {
                         if (strArray.length > 1) {
                             String key = strArray[0];
                             String className = strArray[1];
+                            System.out.println(className);
                             keyClassMap.put(key, Class.forName(className));
                         }
                     }

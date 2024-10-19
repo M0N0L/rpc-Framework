@@ -8,8 +8,8 @@ import org.example.myrpc.utils.ConfigUtils;
 
 public class EasyConsumer {
     public static void main(String[] args) {
-//        RpcConfig rpc = ConfigUtils.loadConfig(RpcConfig.class, "rpc");
-//        System.out.println(rpc);
+        RpcConfig rpc = ConfigUtils.loadConfig(RpcConfig.class, "rpc");
+        System.out.println(rpc);
         UserService userService = ServiceProxyFactory.getProxy(UserService.class);
         User user = new User();
 
