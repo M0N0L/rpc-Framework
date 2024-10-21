@@ -25,6 +25,8 @@ public class RpcApplication {
         Registry registry = RegistryFactory.getInstance(registryConfig.getRegistry());
         registry.init(registryConfig);
         log.info("registry init, config = {}", registryConfig);
+
+        Runtime.getRuntime().addShutdownHook(new Thread(registry::destroy));
     }
 
     /**
