@@ -1,12 +1,15 @@
 package org.example.myrpc.registry;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.collection.ConcurrentHashSet;
 import cn.hutool.cron.CronUtil;
 import cn.hutool.cron.task.Task;
 import cn.hutool.json.JSONUtil;
 import io.etcd.jetcd.*;
 import io.etcd.jetcd.options.GetOption;
 import io.etcd.jetcd.options.PutOption;
+import io.etcd.jetcd.watch.WatchEvent;
+import lombok.extern.slf4j.Slf4j;
 import org.example.myrpc.config.RegistryConfig;
 import org.example.myrpc.model.ServiceMetaInfo;
 
@@ -17,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class EtcdRegistry implements Registry {
 
     private Client client;
@@ -30,6 +34,15 @@ public class EtcdRegistry implements Registry {
      */
     private final Set<String> localRegisterNodeKeySet = new HashSet<>();
 
+    /**
+     * 缓存的服务信息
+     */
+    private final RegistryServiceCache registryServiceCache = new RegistryServiceCache();
+
+    /**
+     * 正在监听的Key集合
+     */
+    private final Set<String> watchingKeySet = new ConcurrentHashSet<>();
 
     @Override
     public void init(RegistryConfig registryConfig) {
@@ -67,8 +80,17 @@ public class EtcdRegistry implements Registry {
 
     @Override
     public List<ServiceMetaInfo> serviceDiscovery(String serviceKey) {
+        // 优先从缓存获取服务
+        List<ServiceMetaInfo> cachedServiceMetaInfoList = registryServiceCache.readCache();
+        if (cachedServiceMetaInfoList != null) {
+//      开发时用Log做断点检测
+//      log.info("使用缓存加载的服务列表");
+            return cachedServiceMetaInfoList;
+        }
+//      开发时用Log做断点检测
+//      log.info("使用缓存加载的服务列表");
         // 前缀搜索，结尾一定要加 '/'
-        String searchPrefix = ETCD_ROOT_PATH + serviceKey;
+        String searchPrefix = ETCD_ROOT_PATH + serviceKey + "/";
 
         try {
             // 前缀查询
@@ -79,22 +101,30 @@ public class EtcdRegistry implements Registry {
                     .get()
                     .getKvs();
             // 解析服务信息
-            return keyValues.stream()
+            List<ServiceMetaInfo> serviceMetaInfoList = keyValues.stream()
                     .map(keyValue -> {
+                        String key = keyValue.getKey().toString(StandardCharsets.UTF_8);
+                        // 监听 key 的变化
+                        watch(key);
                         String value = keyValue.getValue().toString(StandardCharsets.UTF_8);
                         return JSONUtil.toBean(value, ServiceMetaInfo.class);
                     })
                     .collect(Collectors.toList());
+
+            // 写入服务缓存
+            registryServiceCache.writeCache(serviceMetaInfoList);
+            return serviceMetaInfoList;
         } catch (Exception e) {
             throw new RuntimeException("获取服务列表失败", e);
         }
     }
 
+
     @Override
     public void destroy() {
         System.out.println("当前节点下线");
         //下线节点
-        for(String key : localRegisterNodeKeySet) {
+        for (String key : localRegisterNodeKeySet) {
             try {
                 kvClient.delete(ByteSequence.from(key, StandardCharsets.UTF_8)).get();
             } catch (Exception e) {
@@ -140,5 +170,28 @@ public class EtcdRegistry implements Registry {
         // 支持秒级别定时任务
         CronUtil.setMatchSecond(true);
         CronUtil.start();
+    }
+
+    @Override
+    public void watch(String serviceNodeKey) {
+        Watch watchClient = client.getWatchClient();
+        // 未被监听则开启监听
+        boolean newWatch = watchingKeySet.add(serviceNodeKey);
+
+        if (newWatch) {
+            watchClient.watch(ByteSequence.from(serviceNodeKey, StandardCharsets.UTF_8), watchResponse -> {
+                for (WatchEvent event : watchResponse.getEvents()) {
+                    switch (event.getEventType()) {
+                        //key 删除时触发
+                        case DELETE:
+                            registryServiceCache.clearCache();
+                            break;
+                        case PUT:
+                        default:
+                            break;
+                    }
+                }
+            });
+        }
     }
 }

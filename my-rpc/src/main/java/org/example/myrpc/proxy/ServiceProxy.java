@@ -3,6 +3,7 @@ package org.example.myrpc.proxy;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.example.myrpc.RpcApplication;
 import org.example.myrpc.config.RpcConfig;
 import org.example.myrpc.constant.RpcConstant;
@@ -11,7 +12,6 @@ import org.example.myrpc.model.RpcResponse;
 import org.example.myrpc.model.ServiceMetaInfo;
 import org.example.myrpc.registry.Registry;
 import org.example.myrpc.registry.RegistryFactory;
-import org.example.myrpc.serializer.JdkSerializer;
 import org.example.myrpc.serializer.Serializer;
 import org.example.myrpc.serializer.SerializerFactory;
 
@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.List;
+
 
 public class ServiceProxy implements InvocationHandler {
     @Override

@@ -4,6 +4,7 @@ import org.example.myrpc.RpcApplication;
 
 import java.lang.reflect.Proxy;
 import java.security.Provider;
+import org.example.myrpc.registry.RegistryFactory;
 
 public class ServiceProxyFactory {
     public static <T> T getProxy(Class<T> serviceClass) {
