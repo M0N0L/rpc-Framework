@@ -8,11 +8,9 @@ import org.example.myrpc.model.ServiceMetaInfo;
 import org.example.myrpc.registry.LocalRegistry;
 import org.example.myrpc.registry.Registry;
 import org.example.myrpc.registry.RegistryFactory;
-import org.example.myrpc.server.HttpServer;
-import org.example.myrpc.server.VertxHttpServer;
-import org.example.myrpc.server.tcp.VertxTCPServer;
+import org.example.myrpc.server.tcp.VertxTcpServer;
 
-public class TCPProvider {
+public class TcpProvider {
     public static void main(String[] args) {
         //初始化RPC框架
         RpcApplication.init();
@@ -36,7 +34,7 @@ public class TCPProvider {
         }
 
         //提供服务
-        VertxTCPServer vertxTcpServer = new VertxTCPServer();
+        VertxTcpServer vertxTcpServer = new VertxTcpServer();
         vertxTcpServer.doStart(8080);
     }
 }

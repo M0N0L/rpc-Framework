@@ -7,7 +7,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User getUser(User user) {
-        System.out.println(user);
+        System.out.println("收到远程调用");
         return user;
     }
 

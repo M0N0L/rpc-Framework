@@ -12,13 +12,12 @@ import org.example.myrpc.protocol.ProtocolMessageTypeEnum;
 import org.example.myrpc.registry.LocalRegistry;
 
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
-public class TCPServerHandler implements Handler<NetSocket> {
+public class TcpServerHandler implements Handler<NetSocket> {
     @Override
     public void handle(NetSocket netSocket) {
-        netSocket.handler(buffer -> {
+        TcpBufferHandlerWrapper bufferHandlerWrapper = new TcpBufferHandlerWrapper(buffer -> {
             ProtocolMessage<RpcRequest> protocolMessage;
             try {
                 protocolMessage = (ProtocolMessage<RpcRequest>) ProtocolMessageDecoder.decode(buffer);
@@ -53,5 +52,6 @@ public class TCPServerHandler implements Handler<NetSocket> {
                 throw new RuntimeException("协议消息编码错误");
             }
         });
+        netSocket.handler(bufferHandlerWrapper);
     }
 }
