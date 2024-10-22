@@ -12,6 +12,8 @@ import org.example.myrpc.RpcApplication;
 import org.example.myrpc.config.RpcConfig;
 import org.example.myrpc.constant.ProtocolConstant;
 import org.example.myrpc.constant.RpcConstant;
+import org.example.myrpc.loadbalancer.LoadBalancer;
+import org.example.myrpc.loadbalancer.LoadBalancerFactory;
 import org.example.myrpc.model.RpcRequest;
 import org.example.myrpc.model.RpcResponse;
 import org.example.myrpc.model.ServiceMetaInfo;
@@ -25,7 +27,9 @@ import org.example.myrpc.server.tcp.VertxTcpClient;
 import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 
@@ -35,7 +39,6 @@ public class ServiceProxy implements InvocationHandler {
         // 指定序列化器
         final Serializer serializer = SerializerFactory.getInstance(RpcApplication.getRpcConfig().getSerializer());
         String serviceName = method.getDeclaringClass().getName();
-
         RpcRequest rpcRequest = RpcRequest.builder()
                 .serviceName(serviceName)
                 .methodName(method.getName())
@@ -56,7 +59,13 @@ public class ServiceProxy implements InvocationHandler {
             if (CollUtil.isEmpty(serviceMetaInfoList)) {
                 throw new RuntimeException("暂无服务地址");
             }
-            ServiceMetaInfo selectedServiceMetaInfo = serviceMetaInfoList.get(0);
+
+            //负载均衡
+            LoadBalancer balancer = LoadBalancerFactory.getInstance(rpcConfig.getLoadBalancer());
+
+            Map<String, Object> requestParams = new HashMap<>();
+            requestParams.put("methodName", rpcRequest.getMethodName());
+            ServiceMetaInfo selectedServiceMetaInfo = balancer.select(requestParams, serviceMetaInfoList);
             //Http 请求
 //            try (HttpResponse httpResponse = HttpRequest.post(selectedServiceMetaInfo.getServiceAddress())
 //                    .body(bodyBytes)

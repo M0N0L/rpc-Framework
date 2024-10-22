@@ -1,0 +1,3 @@
+roundRobin=org.example.myrpc.loadbalancer.RoundRobinLoadBalancer
+random=org.example.myrpc.loadbalancer.RandomLoadBalancer
+consistentHash=org.example.myrpc.loadbalancer.ConsistentHashLoadBalancer

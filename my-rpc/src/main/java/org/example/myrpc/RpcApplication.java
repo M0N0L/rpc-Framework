@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.myrpc.config.RegistryConfig;
 import org.example.myrpc.config.RpcConfig;
 import org.example.myrpc.constant.RpcConstant;
+import org.example.myrpc.loadbalancer.LoadBalancer;
+import org.example.myrpc.loadbalancer.LoadBalancerFactory;
 import org.example.myrpc.registry.Registry;
 import org.example.myrpc.registry.RegistryFactory;
 import org.example.myrpc.utils.ConfigUtils;
@@ -25,7 +27,6 @@ public class RpcApplication {
         Registry registry = RegistryFactory.getInstance(registryConfig.getRegistry());
         registry.init(registryConfig);
         log.info("registry init, config = {}", registryConfig);
-
         Runtime.getRuntime().addShutdownHook(new Thread(registry::destroy));
     }
 

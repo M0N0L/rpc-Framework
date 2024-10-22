@@ -1,6 +1,8 @@
 package org.example.myrpc.config;
 
 import lombok.Data;
+import org.example.myrpc.constant.LoadBalanceKeys;
+import org.example.myrpc.loadbalancer.LoadBalancer;
 import org.example.myrpc.serializer.SerializerKeys;
 
 
@@ -43,4 +45,9 @@ public class RpcConfig {
      * 注册中心配置
      */
     private RegistryConfig registryConfig = new RegistryConfig();
+
+    /**
+     * 负载均衡器
+     */
+    private String loadBalancer = LoadBalanceKeys.ROUND_ROBIN;
 }
