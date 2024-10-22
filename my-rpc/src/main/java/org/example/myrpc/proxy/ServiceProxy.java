@@ -1,15 +1,21 @@
 package org.example.myrpc.proxy;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.http.HttpRequest;
 import cn.hutool.http.HttpResponse;
+import io.vertx.core.Vertx;
+import io.vertx.core.buffer.Buffer;
+import io.vertx.core.net.NetClient;
 import lombok.extern.slf4j.Slf4j;
 import org.example.myrpc.RpcApplication;
 import org.example.myrpc.config.RpcConfig;
+import org.example.myrpc.constant.ProtocolConstant;
 import org.example.myrpc.constant.RpcConstant;
 import org.example.myrpc.model.RpcRequest;
 import org.example.myrpc.model.RpcResponse;
 import org.example.myrpc.model.ServiceMetaInfo;
+import org.example.myrpc.protocol.*;
 import org.example.myrpc.registry.Registry;
 import org.example.myrpc.registry.RegistryFactory;
 import org.example.myrpc.serializer.Serializer;
@@ -19,6 +25,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 
 public class ServiceProxy implements InvocationHandler {
@@ -49,14 +56,56 @@ public class ServiceProxy implements InvocationHandler {
                 throw new RuntimeException("暂无服务地址");
             }
             ServiceMetaInfo selectedServiceMetaInfo = serviceMetaInfoList.get(0);
+            //Http 请求
+//            try (HttpResponse httpResponse = HttpRequest.post(selectedServiceMetaInfo.getServiceAddress())
+//                    .body(bodyBytes)
+//                    .execute()) {
+//                byte[] result = httpResponse.bodyBytes();
+//                RpcResponse rpcResponse = serializer.deserialize(result, RpcResponse.class);
+//                return rpcResponse.getData();
+//            }
+            // 发送TCP请求
+            Vertx vertx = Vertx.vertx();
+            NetClient netClient = vertx.createNetClient();
+            CompletableFuture<RpcResponse> responseFuture = new CompletableFuture<>();
+            netClient.connect(selectedServiceMetaInfo.getServicePort(), selectedServiceMetaInfo.getServiceHost(),
+                    result -> {
+                        if(result.succeeded()) {
+                            System.out.println("Connected to TCP Server");
+                            io.vertx.core.net.NetSocket socket = result.result();
+                            ProtocolMessage<RpcRequest> protocolMessage = new ProtocolMessage<>();
+                            ProtocolMessage.Header header = new ProtocolMessage.Header();
+                            header.setMagic(ProtocolConstant.PROTOCOL_MAGIC);
+                            header.setVersion(ProtocolConstant.PROTOCOL_VERSION);
+                            header.setSerializer((byte) ProtocolMessageSerializerEnum.getEnumByValue(RpcApplication.getRpcConfig().getSerializer()).getKey());
+                            header.setType((byte) ProtocolMessageTypeEnum.REQUEST.getKey());
+                            header.setRequestId(IdUtil.getSnowflakeNextId());
+                            protocolMessage.setHeader(header);
+                            protocolMessage.setBody(rpcRequest);
+                            try {
+                                Buffer encodeBuffer = ProtocolMessageEncoder.encode(protocolMessage);
+                                socket.write(encodeBuffer);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
 
-            try(HttpResponse httpResponse = HttpRequest.post(selectedServiceMetaInfo.getServiceAddress())
-                    .body(bodyBytes)
-                    .execute()) {
-                byte[] result = httpResponse.bodyBytes();
-                RpcResponse rpcResponse = serializer.deserialize(result, RpcResponse.class);
-                return rpcResponse.getData();
-            }
+                            //接受请求
+                            socket.handler(buffer -> {
+                                try {
+                                    ProtocolMessage<RpcResponse> rpcResponseProtocolMessage = (ProtocolMessage<RpcResponse>) ProtocolMessageDecoder.decode(buffer);
+                                    responseFuture.complete(rpcResponseProtocolMessage.getBody());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            });
+                        } else {
+                            System.err.println("Failed to connect to TCP server");
+                        }
+                    });
+            RpcResponse rpcResponse = responseFuture.get();
+
+            netClient.close();
+            return rpcResponse.getData();
         } catch (IOException exception) {
             exception.printStackTrace();
         }
