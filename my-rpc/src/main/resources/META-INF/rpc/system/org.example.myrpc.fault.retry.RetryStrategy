@@ -1,0 +1,2 @@
+no=org.example.myrpc.fault.retry.NoRetryStrategy
+fixedInterval=org.example.myrpc.fault.retry.FixedIntervalRetryStrategy

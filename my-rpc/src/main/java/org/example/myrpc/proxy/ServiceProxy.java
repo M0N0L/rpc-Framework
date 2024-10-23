@@ -11,7 +11,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.myrpc.RpcApplication;
 import org.example.myrpc.config.RpcConfig;
 import org.example.myrpc.constant.ProtocolConstant;
+import org.example.myrpc.constant.RetryStrategyKeys;
 import org.example.myrpc.constant.RpcConstant;
+import org.example.myrpc.fault.retry.RetryStrategy;
+import org.example.myrpc.fault.retry.RetryStrategyFactory;
 import org.example.myrpc.loadbalancer.LoadBalancer;
 import org.example.myrpc.loadbalancer.LoadBalancerFactory;
 import org.example.myrpc.model.RpcRequest;
@@ -75,7 +78,9 @@ public class ServiceProxy implements InvocationHandler {
 //                return rpcResponse.getData();
 //            }
             // 发送TCP请求
-            RpcResponse rpcResponse = VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo);
+            RetryStrategy retryStrategy = RetryStrategyFactory.getInstance(rpcConfig.getRetryStrategy());
+            RpcResponse rpcResponse = retryStrategy.doRetry(() ->
+                    VertxTcpClient.doRequest(rpcRequest, selectedServiceMetaInfo));
             return rpcResponse.getData();
         } catch (IOException exception) {
             exception.printStackTrace();

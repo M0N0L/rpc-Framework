@@ -2,6 +2,7 @@ package org.example.myrpc.config;
 
 import lombok.Data;
 import org.example.myrpc.constant.LoadBalanceKeys;
+import org.example.myrpc.constant.RetryStrategyKeys;
 import org.example.myrpc.loadbalancer.LoadBalancer;
 import org.example.myrpc.serializer.SerializerKeys;
 
@@ -50,4 +51,9 @@ public class RpcConfig {
      * 负载均衡器
      */
     private String loadBalancer = LoadBalanceKeys.ROUND_ROBIN;
+
+    /**
+     * 重试机制
+     */
+    private String retryStrategy = RetryStrategyKeys.FIXED_INTERVAL;
 }
