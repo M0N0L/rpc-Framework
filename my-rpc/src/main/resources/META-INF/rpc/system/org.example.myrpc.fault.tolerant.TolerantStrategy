@@ -1,0 +1,2 @@
+failSafe=org.example.myrpc.fault.tolerant.FailSafeTolerantStrategy
+failFast=org.example.myrpc.fault.tolerant.FailFastTolerantStrategy

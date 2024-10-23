@@ -3,6 +3,7 @@ package org.example.myrpc.config;
 import lombok.Data;
 import org.example.myrpc.constant.LoadBalanceKeys;
 import org.example.myrpc.constant.RetryStrategyKeys;
+import org.example.myrpc.constant.TolerantStrategyKeys;
 import org.example.myrpc.loadbalancer.LoadBalancer;
 import org.example.myrpc.serializer.SerializerKeys;
 
@@ -56,4 +57,9 @@ public class RpcConfig {
      * 重试机制
      */
     private String retryStrategy = RetryStrategyKeys.FIXED_INTERVAL;
+
+    /**
+     * 容错处理
+     */
+    private String tolerantStrategy = TolerantStrategyKeys.FAIL_SAFE;
 }
