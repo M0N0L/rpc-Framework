@@ -1,41 +1,19 @@
 package org.example.provider;
 
 import org.example.common.service.UserService;
-import org.example.myrpc.RpcApplication;
-import org.example.myrpc.config.RegistryConfig;
-import org.example.myrpc.config.RpcConfig;
-import org.example.myrpc.model.ServiceMetaInfo;
-import org.example.myrpc.registry.LocalRegistry;
-import org.example.myrpc.registry.Registry;
-import org.example.myrpc.registry.RegistryFactory;
-import org.example.myrpc.server.HttpServer;
-import org.example.myrpc.server.VertxHttpServer;
+import org.example.myrpc.bootstrap.ProviderBootStrap;
+import org.example.myrpc.model.ServiceRegisterInfo;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EasyProvider {
     public static void main(String[] args) {
-        //初始化RPC框架
-        RpcApplication.init();
+        List<ServiceRegisterInfo<?>> serviceRegisterInfoList = new ArrayList<>();
+        ServiceRegisterInfo serviceRegisterInfo = new ServiceRegisterInfo(UserService.class.getName(), UserServiceImpl.class);
+        serviceRegisterInfoList.add(serviceRegisterInfo);
 
-        // 注册服务
-        String serviceName = UserService.class.getName();
-        LocalRegistry.register(UserService.class.getName(), UserServiceImpl.class);
-
-//         注册服务到注册中心
-        RpcConfig rpcConfig = RpcApplication.getRpcConfig();
-        RegistryConfig registryConfig = rpcConfig.getRegistryConfig();
-        Registry registry =  RegistryFactory.getInstance(registryConfig.getRegistry());
-        ServiceMetaInfo serviceMetaInfo = new ServiceMetaInfo();
-        serviceMetaInfo.setServiceName(serviceName);
-        serviceMetaInfo.setServiceHost(rpcConfig.getServerHost());
-        serviceMetaInfo.setServicePort(rpcConfig.getServerPort());
-        try {
-            registry.register(serviceMetaInfo);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
-        //提供服务
-        HttpServer httpServer = new VertxHttpServer();
-        httpServer.doStart(RpcApplication.getRpcConfig().getServerPort());
+        // 服务提供者初始化
+        ProviderBootStrap.init(serviceRegisterInfoList);
     }
 }
