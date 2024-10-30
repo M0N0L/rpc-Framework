@@ -5,6 +5,9 @@ import org.example.myrpc.model.ServiceMetaInfo;
 
 import java.util.List;
 
+/**
+ * 注册中心，所有的服务都会注册在这里
+ */
 public interface Registry {
     /**
      * 初始化

@@ -35,6 +35,6 @@ public class TcpProvider {
 
         //提供服务
         VertxTcpServer vertxTcpServer = new VertxTcpServer();
-        vertxTcpServer.doStart(8080);
+        vertxTcpServer.doStart(rpcConfig.getServerPort());
     }
 }
